@@ -1,5 +1,3 @@
-* Reproducir análisis cimmyt, sólo univariado. modelo 1, 2, 3 y 4. del paper optimizing  sparse testing. poner GY en la respuesta, con diferentes testing. Correlación y NRMSE. Reordenar los datos, columnas como environments. Imputar markers si hay NA con la media.
-
 # Models
 
 * **M1**: cv_env_random_line

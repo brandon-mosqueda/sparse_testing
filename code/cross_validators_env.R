@@ -427,34 +427,34 @@ folds_by_model <- function(model,
 
   if (model == "m1") {
     folds <- cv_env_random_line(
-      lines = Pheno$Line,
-      envs = Pheno$Env,
-      folds_num = 10,
+      lines = lines,
+      envs = envs,
+      folds_num = folds_num,
       training_lines_num = training_lines_num,
       verbose = verbose
     )
   } else if (model == "m2") {
     folds <- cv_env_partial_random_line(
-      lines = Pheno$Line,
-      envs = Pheno$Env,
-      folds_num = 10,
+      lines = lines,
+      envs = envs,
+      folds_num = folds_num,
       training_lines_num = training_lines_num,
       verbose = verbose
     )
   } else if (model == "m3") {
     folds <- cv_env_random_ibd(
-      lines = Pheno$Line,
-      envs = Pheno$Env,
+      lines = lines,
+      envs = envs,
       training_proportion = training_proportion,
-      folds_num = 10,
+      folds_num = folds_num,
       verbose = verbose
     )
   } else if (model == "m4") {
     folds <- cv_augmented_ibd(
-      lines = Pheno$Line,
-      envs = Pheno$Env,
+      lines = lines,
+      envs = envs,
       training_proportion = training_proportion,
-      folds_num = 10,
+      folds_num = folds_num,
       verbose = verbose
     )
   } else {

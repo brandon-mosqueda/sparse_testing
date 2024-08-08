@@ -5,6 +5,7 @@ setwd("~/data_science/sparse_testing")
 library(SKM)
 library(tidyverse)
 
+# YT_22-23 ---------------------------------------------------------------------
 Pheno <- SKM::read_csv(
     "original_files/YT_22-23/input_pheno_YT_22-23.txt",
     sep = "\t"
@@ -46,3 +47,19 @@ data_info <- list(
 )
 
 save(Pheno, Geno, data_info, file = "data/YT_22-23.RData")
+
+# Test -------------------------------------------------------------------------
+load("data/YT_22-23.RData", verbose = TRUE)
+
+Pheno <- Pheno %>%
+  group_by(Env) %>%
+  arrange(Line) %>%
+  slice(seq(50)) %>%
+  ungroup() %>%
+  droplevels()
+
+lines <- levels(Pheno$Line)
+Geno <- Geno[lines, lines]
+
+data_info$name <- "Test"
+save(Pheno, Geno, data_info, file = "data/Test.RData")

@@ -8,22 +8,25 @@ setwd("~/data_science/sparse_testing")
 source("code/utils.R")
 source("code/cross_validators_env.R")
 
-load("data/YT_22-23.RData", verbose = TRUE)
-
 # Globals definition --------------------------------------------------
 with_interaction <- FALSE
 model_name <- "M1"
 
+dataset <- "YT_22-23"
 testing_proportions <- c(0.15, 0.25, 0.5, 0.75, 0.85)
 iterations_number <- 10000
 burn_in <- 5000
 base_results_dir <- "results"
 
+# dataset <- "Test"
+# testing_proportions <- c(0.5)
 # base_results_dir <- "trash"
 # iterations_number <- 10
 # burn_in <- 5
 
 # Data preparation --------------------------------------------------
+load(sprintf("data/%s.RData", dataset), verbose = TRUE)
+
 Pheno <- Pheno %>% arrange(Env, Line) %>% droplevels()
 Env <- model.matrix(~ 0 + Env, data = Pheno)
 Line <- model.matrix(~ 0 + Line, data = Pheno)
@@ -32,15 +35,16 @@ geno_lines <- levels(Pheno$Line)
 Geno <- cholesky(Geno[geno_lines, geno_lines])
 GenoLine <- Line %*% Geno
 
-LinexEnv <- model.matrix(~ 0 + GenoLine:Env)
-
 ETA <- list(
   Env = list(x = Env, model = "fixed"),
   Line = list(x = GenoLine, model = "BRR")
 )
 
 if (with_interaction) {
-  ETA$LinexEnv <- list(x = LinexEnv, model = "BRR")
+  ETA$LinexEnv <- list(
+    x = model.matrix(~ 0 + GenoLine:Env),
+    model = "BRR"
+  )
 }
 
 y <- Pheno[[data_info$traits]]
@@ -112,27 +116,21 @@ for (testing_proportion in testing_proportions) {
       APC = pearson(Predicted, Observed),
       NRMSE = nrmse(Observed, Predicted)
     ) %>%
-    mutate(
-      Dataset = data_info$name,
-      Model = model_name,
-      TestingProportion = testing_proportion,
-      WithInteraction = with_interaction,
-      AnalysisType = "Unitrait"
-    ) %>%
     mutate(Fold = as.character(Fold))
 
   Global <- Summary %>%
     summarise_if(is.numeric, mean, na.rm = TRUE) %>%
+    mutate(Fold = "Global")
+
+  Summary <- bind_rows(Summary, Global) %>%
     mutate(
-      Fold = "Global",
       Dataset = data_info$name,
+      Trait = data_info$traits,
       Model = model_name,
       TestingProportion = testing_proportion,
       WithInteraction = with_interaction,
       AnalysisType = "Unitrait"
     )
-
-  Summary <- bind_rows(Summary, Global)
 
   write_csv(Summary, file = file.path(results_dir, "summary.csv"))
   write_csv(Predictions, file = file.path(results_dir, "predictions.csv"))
