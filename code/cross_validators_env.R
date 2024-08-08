@@ -415,3 +415,51 @@ cv_augmented_ibd <- function(lines,
 
   return(folds)
 }
+
+folds_by_model <- function(model,
+                           lines,
+                           envs,
+                           folds_num,
+                           training_lines_num,
+                           training_proportion,
+                           verbose) {
+  model <- tolower(model)
+
+  if (model == "m1") {
+    folds <- cv_env_random_line(
+      lines = Pheno$Line,
+      envs = Pheno$Env,
+      folds_num = 10,
+      training_lines_num = training_lines_num,
+      verbose = verbose
+    )
+  } else if (model == "m2") {
+    folds <- cv_env_partial_random_line(
+      lines = Pheno$Line,
+      envs = Pheno$Env,
+      folds_num = 10,
+      training_lines_num = training_lines_num,
+      verbose = verbose
+    )
+  } else if (model == "m3") {
+    folds <- cv_env_random_ibd(
+      lines = Pheno$Line,
+      envs = Pheno$Env,
+      training_proportion = training_proportion,
+      folds_num = 10,
+      verbose = verbose
+    )
+  } else if (model == "m4") {
+    folds <- cv_augmented_ibd(
+      lines = Pheno$Line,
+      envs = Pheno$Env,
+      training_proportion = training_proportion,
+      folds_num = 10,
+      verbose = verbose
+    )
+  } else {
+    stop("Model not found")
+  }
+
+  return(folds)
+}

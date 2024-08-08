@@ -1,0 +1,6 @@
+results/
+trash/
+*.code-workspace
+test.R
+original_files/
+data/
