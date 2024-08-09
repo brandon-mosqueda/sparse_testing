@@ -2,6 +2,8 @@ rm(list = ls())
 
 library(SKM)
 library(dplyr)
+library(doParallel)
+library(foreach)
 
 setwd("~/data_science/sparse_testing")
 
@@ -36,18 +38,21 @@ Geno <- cholesky(Geno[geno_lines, geno_lines])
 GenoLine <- Line %*% Geno
 
 ETA <- list(
-  Env = list(x = Env, model = "fixed"),
-  Line = list(x = GenoLine, model = "BRR")
+  Env = list(X = Env, model = "FIXED"),
+  Line = list(X = GenoLine, model = "BRR")
 )
 
 if (with_interaction) {
   ETA$LinexEnv <- list(
-    x = model.matrix(~ 0 + GenoLine:Env),
+    X = model.matrix(~ 0 + GenoLine:Env),
     model = "BRR"
   )
 }
 
 y <- Pheno[[data_info$traits]]
+
+cluster <- makeCluster(10, outfile = "")
+registerDoParallel(cluster)
 
 # Model evaluation --------------------------------------------------
 for (testing_proportion in testing_proportions) {
@@ -85,29 +90,37 @@ for (testing_proportion in testing_proportions) {
 
   Predictions <- data.frame()
 
-  for (i in seq_along(folds)) {
-    echo("\t\t*** Fold: %s ***", i)
+  Predictions <- foreach(
+    i = seq_along(folds),
+    .combine = rbind,
+    .packages = "dplyr"
+  )  %dopar% {
+    SKM::echo("\t\t*** Fold: %s ***", i)
     fold <- folds[[i]]
 
     testing_indices <- env_testing_indices(fold)
+    y_na <- replace(y, testing_indices, NA)
 
-    model <- bayesian_model(
-      ETA,
-      y,
-      testing_indices = testing_indices,
-      iterations_number = iterations_number,
-      burn_in = burn_in
+    temp_dir <- file.path(tempdir(), i, runif(1))
+    SKM::mkdir(temp_dir)
+
+    model <- BGLR::BGLR(
+      y_na,
+      ETA = ETA,
+      nIter = iterations_number,
+      burnIn = burn_in,
+      verbose = FALSE,
+      saveAt = temp_dir
     )
-    predictions <- predict(model, indices = testing_indices)$predicted
+    predictions <- model$yHat[testing_indices]
 
-    Predictions <- Predictions %>%
-      bind_rows(data.frame(
-        Fold = i,
-        Line = Pheno$Line[testing_indices],
-        Env = Pheno$Env[testing_indices],
-        Predicted = predictions,
-        Observed = y[testing_indices]
-      ))
+    data.frame(
+      Fold = i,
+      Line = Pheno$Line[testing_indices],
+      Env = Pheno$Env[testing_indices],
+      Predicted = predictions,
+      Observed = y[testing_indices]
+    )
   }
 
   Summary <- Predictions %>%
@@ -135,3 +148,5 @@ for (testing_proportion in testing_proportions) {
   write_csv(Summary, file = file.path(results_dir, "summary.csv"))
   write_csv(Predictions, file = file.path(results_dir, "predictions.csv"))
 }
+
+stopCluster(cluster)
