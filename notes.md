@@ -1,7 +1,3 @@
-with interaction
-
-    ✅ M1: 0.15, 0.25, 0.5
-
 # Models
 
 * **M1**: cv_env_random_line
