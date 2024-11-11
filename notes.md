@@ -7,4 +7,4 @@
 
 # Correo
 
-Hay 156 líneas en los datos phenotípicos que no estaban en los marcadores.
+Te pido de favor que implementes los modelos M1-M4 de Sparse testing que implementaste en los datos pasados 22-23 a estos nuevos datos correspondientes al año 23_24.

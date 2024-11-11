@@ -48,6 +48,44 @@ data_info <- list(
 
 save(Pheno, Geno, data_info, file = "data/YT_22-23.RData")
 
+# YT_23-24 ---------------------------------------------------------------------
+
+Pheno <- readxl::read_excel("data/YT_23-24.xlsx") %>%
+  # Convert B2IR, B5IR, BDRT, BLHT columns to rows
+  pivot_longer(
+    cols = c(B2IR, B5IR, BDRT, BLHT),
+    names_to = "Env",
+    values_to = "GY"
+  ) %>%
+  rename(Line = "GID") %>%
+  mutate(Env = factor(Env), Line = factor(Line)) %>%
+  arrange(Env, Line)
+
+Markers <- SKM::read_csv(
+    "data/Numerical_input_YT_23_24.txt",
+    sep = "\t"
+  ) %>%
+  rename(Line = "V1") %>%
+  as.data.frame()
+
+final_lines <- intersect(levels(Pheno$Line), Markers$Line)
+
+Pheno <- Pheno %>% filter(Line %in% final_lines) %>% droplevels()
+Markers <- Markers %>% filter(Line %in% final_lines)
+
+rownames(Markers) <- as.character(Markers$Line)
+Markers$Line <- NULL
+Markers <- scale(as.matrix(Markers))
+
+Geno <- tcrossprod(Markers) / ncol(Markers)
+
+data_info <- list(
+  name = "YT_23-24",
+  traits = "GY"
+)
+
+save(Pheno, Geno, data_info, file = "data/YT_23-24.RData")
+
 # Test -------------------------------------------------------------------------
 load("data/YT_22-23.RData", verbose = TRUE)
 
