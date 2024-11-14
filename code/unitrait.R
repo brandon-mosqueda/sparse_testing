@@ -101,16 +101,13 @@ for (testing_proportion in testing_proportions) {
     testing_indices <- env_testing_indices(fold)
     y_na <- replace(y, testing_indices, NA)
 
-    temp_dir <- file.path(tempdir(), i, runif(1))
-    SKM::mkdir(temp_dir)
-
     model <- BGLR::BGLR(
       y_na,
       ETA = ETA,
       nIter = iterations_number,
       burnIn = burn_in,
       verbose = FALSE,
-      saveAt = temp_dir
+      saveAt = tempdir()
     )
     predictions <- model$yHat[testing_indices]
 
@@ -132,7 +129,14 @@ for (testing_proportion in testing_proportions) {
     mutate(Fold = as.character(Fold))
 
   Global <- Summary %>%
-    summarise_if(is.numeric, mean, na.rm = TRUE) %>%
+    summarise_if(
+      is.numeric,
+      list(
+        MEAN = ~ mean(., na.rm = TRUE),
+        SE = ~ sd(., na.rm = TRUE) / sqrt(n())
+      )
+    ) %>%
+    rename_with(~ gsub("_MEAN", "", .x)) %>%
     mutate(Fold = "Global")
 
   Summary <- bind_rows(Summary, Global) %>%
