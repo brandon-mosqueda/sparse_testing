@@ -1,3 +1,9 @@
+# To do
+
+✅ Calcular las predicciones observados y predichos con ambiente, fold, linea y todo en CSV. Todo en un sólo archivo excel con cada dataset en diferente pestaña.
+
+* Generar las gráficas por ambiente. Con NRMSE y APC.
+
 # Models
 
 * **M1**: cv_env_random_line
