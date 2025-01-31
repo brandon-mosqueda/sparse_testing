@@ -86,6 +86,68 @@ data_info <- list(
 
 save(Pheno, Geno, data_info, file = "data/YT_23-24.RData")
 
+# YT_EYT_22_23 -----------------------------------------------------------------
+Pheno <- readxl::read_excel("original_files/YT_EYT_22_23/YT_EYT_22_23.xlsx") %>%
+  # Convert B2IR, B5IR, BDRT, BLHT columns to rows
+  pivot_longer(
+    cols = c(B2IR, B5IR, BDRT, BLHT),
+    names_to = "Env",
+    values_to = "GY"
+  ) %>%
+  rename(Line = "GID", Trial = "trial") %>%
+  mutate(
+    Env = factor(Env),
+    Line = factor(Line)
+  ) %>%
+  arrange(Env, Line) %>%
+  group_by(Env) %>%
+  mutate(GY = ifelse(is.na(GY), mean(GY, na.rm = TRUE), GY)) %>%
+  ungroup()
+
+Markers <- SKM::read_csv(
+    "original_files/YT_EYT_22_23/Numerical_input_YT_EYT_22_23.txt",
+    sep = "\t"
+  ) %>%
+  rename(Line = "V1") %>%
+  as.data.frame()
+
+final_lines <- intersect(levels(Pheno$Line), Markers$Line)
+
+Pheno <- Pheno %>%
+  filter(Line %in% final_lines) %>%
+  droplevels() %>%
+  arrange(Env, Line)
+Markers <- Markers %>%
+  filter(Line %in% final_lines) %>%
+  arrange(Line)
+
+rownames(Markers) <- as.character(Markers$Line)
+Markers$Line <- NULL
+Markers <- scale(as.matrix(Markers))
+
+Geno <- tcrossprod(Markers) / ncol(Markers)
+
+data_info <- list(
+  name = "YT_EYT_22_23",
+  traits = "GY"
+)
+
+save(Pheno, Geno, data_info, file = "data/YT_EYT_22_23.RData")
+
+# Test_YT_EYT ------------------------------------------------------------------
+load("data/YT_EYT_22_23.RData", verbose = TRUE)
+
+set.seed(15)
+lines <- sort(sample(rownames(Geno), 50))
+Pheno <- Pheno %>%
+  filter(Line %in% lines) %>%
+  droplevels()
+Geno <- Geno[lines, lines]
+
+data_info$name <- "Test_YT_EYT"
+
+save(Pheno, Geno, data_info, file = "data/Test_YT_EYT.RData")
+
 # Test -------------------------------------------------------------------------
 load("data/YT_22-23.RData", verbose = TRUE)
 
