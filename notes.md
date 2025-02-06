@@ -1,5 +1,10 @@
 # To do
 
+* no inter ✅
+* inter (M1, M3, M4) ✅
+
+* M2 🌮 cimmyt
+
 # Models
 
 * **M1**: cv_env_random_line
